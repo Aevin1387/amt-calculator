@@ -5,9 +5,6 @@
 
 	// Inputs.
 	var income = 0;
-	// var isos = 0;
-	var strike = 0;
-	var fmv = 0;
 	var filingStatus = 'single';
 	var maxISOs = 0;
 
@@ -19,18 +16,20 @@
 	var amt = 0;
 	var ordinaryTax = 0;
 	var payableTax = 0;
+	var longTermGains = 0;
+	var shortTermGains = 0;
 
 	// Constants for 2016.
 	var exemption = {
 		'single': {
-			amount: 70300,
-			phaseout: 500000,
-			break: 95750
+			amount: 71700,
+			phaseout: 510300,
+			break: 194800
 		},
 		'married': {
-			amount: 109400,
-			phaseout: 1000000,
-			break: 191500
+			amount: 111700,
+			phaseout: 1020600,
+			break: 194800
 		},
 		'mfs': {
 			amount: 54700,
@@ -38,24 +37,29 @@
 			break: 95750
 		}
 	};
+	var standardDeductions = {
+		'single': 12200,
+		'married': 24400,
+		'mfs': 12200
+	}
 	var ordinaryTaxRates = {
 		'single': {
 			'10': 0,
-			'12': 9525,
-			'22': 38700,
-			'24': 82500,
-			'32': 157500,
-			'35': 200000,
-			'37': 500000
+			'12': 9700,
+			'22': 39475,
+			'24': 84200,
+			'32': 160725,
+			'35': 204100,
+			'37': 510300
 		},
 		'married': {
 			'10': 0,
-			'12': 19050,
-			'22': 77400,
-			'24': 165000,
-			'32': 315000,
-			'35': 400000,
-			'37': 600000
+			'12': 19400,
+			'22': 78950,
+			'24': 168400,
+			'32': 321450,
+			'35': 408200,
+			'37': 612350
 		},
 		'mfs': {
 			'10': 0,
@@ -68,11 +72,12 @@
 		}
 	}
 
+	var exercises = [];
 
 	// Calculate bargain element.
 	// (fmv - strike price) * ISOs exercised
 	// We pass `isos` into the function to allow for newton's method
-	function calculateBargainElement(isos) {
+	function calculateBargainElement(isos, strike, fmv) {
 		return (num(fmv) - num(strike)) * num(isos);
 	}
 
@@ -97,7 +102,7 @@
 
 	// Calculate ordinary tax.
 	function calculateOrdinaryTax() {
-		var inc = num(income)
+		var inc = num(income) - standardDeductions[filingStatus] + num(shortTermGains);
 		var ord = ordinaryTaxRates[filingStatus];
 		var keys = Object.keys(ord);
 		var bracket = 0;
@@ -117,6 +122,18 @@
 			tax += (ord[keys[i + 1]] - ord[keys[i]]) * num(keys[i]) / 100
 			i--;
 		}
+
+		var ltg = num(longTermGains);
+		var ltgTax = 0;
+		if (num(income) < 39375) {
+			ltgTax = 0
+		} else if (num(income) < 434550) {
+			ltgTax = ltg * 0.15;
+		} else {
+			ltgTax = ltg * 0.2;
+		}
+
+		tax = ltgTax + tax;
 
 		return tax;
 	}
@@ -139,9 +156,13 @@
 	})
 
 	// Calculate everything.
-	function calculate(isos) {
-		bargainElement = calculateBargainElement(isos);
-		amti = num(income) + num(bargainElement);
+	function calculate() {
+		let totalBargain = 0;
+		exercises.forEach(exercise => {
+			const exerciseBargainElement = exercise['bargainElement'];
+			totalBargain = totalBargain + exerciseBargainElement;
+		});
+		amti = num(income) + num(longTermGains) + num(shortTermGains) + num(totalBargain);
 		amtexemption = calculateAmtExemption(num(amti));
 		amtbase = num(amti) - num(amtexemption);
 		amt = calculateAmt(num(amtbase));
@@ -152,27 +173,59 @@
 	// Collect inputs.
 	function getInputs() {
 		income = document.getElementById('income').value
-		strike = document.getElementById('strike').value
-		// isos = document.getElementById('isos').value
-		fmv = document.getElementById('fmv').value
+		longTermGains = document.getElementById('long-term-gains').value;
+		shortTermGains = document.getElementById('short-term-gains').value;
 	}
 
 	// Format inputs.
 	function formatInputs() {
 		document.getElementById('income').value = document.getElementById('income').value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-		document.getElementById('isos').value = document.getElementById('isos').value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-		document.getElementById('strike').value = document.getElementById('strike').value.replace(/\D\./g, "");
-		document.getElementById('fmv').value = document.getElementById('fmv').value.replace(/\D\./g, "");
+		// document.getElementById('isos').value = document.getElementById('isos').value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+		// document.getElementById('strike').value = document.getElementById('strike').value.replace(/\D\./g, "");
+		// document.getElementById('fmv').value = document.getElementById('fmv').value.replace(/\D\./g, "");
+	}
+
+	function clearIsoInputs() {
+		document.getElementById('isos').value = ''
+		document.getElementById('strike').value = ''
+		document.getElementById('fmv').value = ''
+	}
+
+	function addExerciseToTable(isos, strike, fmv, bargainElement) {
+		const exerciseTable = document.getElementById('exercises-list');
+		const exerciseRow = exerciseTable.insertRow();
+		const isosItem = exerciseRow.insertCell();
+		const strikeItem = exerciseRow.insertCell();
+		const fmvItem = exerciseRow.insertCell();
+		const bargainElementItem = exerciseRow.insertCell();
+		isosItem.innerText = isos
+		strikeItem.innerText = strike;
+		fmvItem.innerText = fmv;
+		bargainElementItem.innerText = bargainElement;
+	}
+
+	function addExercise() {
+		const isos = document.getElementById('isos').value;
+		const strike = document.getElementById('strike').value;
+		const fmv = document.getElementById('fmv').value;
+		const bargainElement = calculateBargainElement(isos, strike, fmv);
+
+		exercises.push({ 'isos': isos, 'strike': strike, 'fmv': fmv, 'bargainElement': bargainElement });
+		addExerciseToTable(isos, strike, fmv, bargainElement);
+		clearIsoInputs();
+		calculate();
+		maxISOs = findISOs();
+		updateHtml();
 	}
 
 	// Send outputs to HTML elements.
 	function updateHtml() {
 		document.getElementById('bargainElement').innerText = numberFormat(bargainElement, ',');
-		document.getElementById('amti').innerText = numberFormat(amti, ','); 
-		document.getElementById('amtexemption').innerText = numberFormat(amtexemption, ','); 
-		document.getElementById('amtbase').innerText = numberFormat(amtbase, ','); 
-		document.getElementById('amt').innerText = numberFormat(amt, ','); 
-		document.getElementById('ordinaryTax').innerText = numberFormat(ordinaryTax, ','); 
+		document.getElementById('amti').innerText = numberFormat(amti, ',');
+		document.getElementById('amtexemption').innerText = numberFormat(amtexemption, ',');
+		document.getElementById('amtbase').innerText = numberFormat(amtbase, ',');
+		document.getElementById('amt').innerText = numberFormat(amt, ',');
+		document.getElementById('ordinaryTax').innerText = numberFormat(ordinaryTax, ',');
 		document.getElementById('income-output').innerText = document.getElementById('income').value;
 		document.getElementById('payable-tax').innerText = numberFormat(payableTax, ',');
 		if (amt > ordinaryTax) {
@@ -187,11 +240,12 @@
 	document.querySelector('form').addEventListener('keyup', function(e) {
 		getInputs();
 		formatInputs();
-		var isos = document.getElementById('isos').value;
-		calculate(isos);
-		maxISOs = findISOs(isos);
+		calculate();
+		maxISOs = findISOs();
 		updateHtml();
 	})
+
+	document.getElementById('add-exercise').onclick = addExercise;
 
 	// Format numbers.
 	function numberFormat(number, _sep) {
@@ -215,7 +269,14 @@
 	 * Netown's method to approximate ISO shares where Ordinary Tax equals AMT
 	 */
 
-	function findISOs(isos) {
+	function findISOs() {
+		if (exercises.length == 0) {
+			return;
+		}
+		var lastExercise = exercises[exercises.length-1];
+		var isos = lastExercise['isos'];
+		var fmv = lastExercise['fmv'];
+		var strike = lastExercise['strike'];
 		var tempMaxISOs = num(isos);
 		var discrepancy = amt - ordinaryTax;
 
@@ -236,7 +297,7 @@
 				tempMaxISOs = (upper + lower) / 2;
 			}
 
-			var bargainElement = calculateBargainElement(tempMaxISOs);
+			var bargainElement = calculateBargainElement(tempMaxISOs, strike, fmv);
 			var amti = num(income) + num(bargainElement);
 			var amtexemption = calculateAmtExemption(num(amti));
 			var amtbase = num(amti) - num(amtexemption);
@@ -265,7 +326,7 @@
 	/**
 	 * Remove class once.
 	 */
-	
+
 	function removeClass(el, c) {
 		if (el.classList.contains(c)) return el.classList.remove(c);
 	}

@@ -44,7 +44,7 @@
       </main>
     </div>
 
-    <div class="fl w-100 w-50-l">  
+    <div class="fl w-100 w-50-l">
       <main class="measure-wide center fl-l pl4-l">
         <form class="mt5">
           <p class="f4 fw3 lh-copy">
@@ -53,6 +53,16 @@
           <div class="mt4 relative f3 f2-ns">
             <span class="absolute">Income</span>
             <span class="f5 f3-ns fr tr w-100">$<input id="income" class="f3 f2-ns avenir tr underlined dollar input-reset bg-transparent w-30 fr" type="text" placeholder="130,000"></span>
+            <div class="cf"></div>
+          </div>
+          <div class="mt4 relative f3 f2-ns">
+            <span class="absolute">Long Term Capital Gains</span>
+            <span class="f5 f3-ns fr tr w-100">$<input id="long-term-gains" class="f3 f2-ns avenir tr underlined dollar input-reset bg-transparent w-30 fr" type="text" placeholder="130,000"></span>
+            <div class="cf"></div>
+          </div>
+          <div class="mt4 relative f3 f2-ns">
+            <span class="absolute">Short Term Capital Gains</span>
+            <span class="f5 f3-ns fr tr w-100">$<input id="short-term-gains" class="f3 f2-ns avenir tr underlined dollar input-reset bg-transparent w-30 fr" type="text" placeholder="130,000"></span>
             <div class="cf"></div>
           </div>
           <div class="mt4 relative f3 f2-ns">
@@ -69,6 +79,20 @@
             <span class="absolute dib w-70">409A Share Value</span>
             <span class="f5 f3-ns fr tr w-100">$<input id="fmv" class="f3 f2-ns avenir tr underlined dollar input-reset bg-transparent w-30 fr" type="text" placeholder="16"></span>
             <div class="cf"></div>
+          </div>
+          <div class="mt4 relative f3 f2-ns">
+            <a href="#0" id="add-exercise" class="f6 link dim br3 ph3 pv2 mb2 dib white bg-near-black">Add Exercise</a>
+          </div>
+          <div class="mt4 relative f3 f2-ns">
+            <div class="f4 mb3">ISOs exercised</div>
+            <table id="exercises-list">
+              <thead>
+                <th>ISOs exercised</th>
+                <th>Strike Price</th>
+                <th>409A Share Value</th>
+                <th>Bargain Element</th>
+              </thead>
+            </table>
           </div>
           <div class="mt4 relative f3 f2-ns">
             <div class="f4 mb3">Filing Status</div>
@@ -182,7 +206,7 @@
             </div>
           </div>
           <p class="f4">
-            To prevent upper-income taxpayers from benefiting from the exemption, it “phases out” as AMTI increases. For every $1 beyond the phase out amount, the exemption amount is reduced by $0.25. For example, a single person who has AMTI of $525,000 will only have 70,300 – ((525,000 – 500,000) x 0.25) = 64,050 of exemptions. <a href="http://amtadvisor.com/AMT_Exemption.html" class="link blue hover-bg-light-gray" target="_blank">Learn more about calculating AMT exemptions.</a> 
+            To prevent upper-income taxpayers from benefiting from the exemption, it “phases out” as AMTI increases. For every $1 beyond the phase out amount, the exemption amount is reduced by $0.25. For example, a single person who has AMTI of $525,000 will only have 70,300 – ((525,000 – 500,000) x 0.25) = 64,050 of exemptions. <a href="http://amtadvisor.com/AMT_Exemption.html" class="link blue hover-bg-light-gray" target="_blank">Learn more about calculating AMT exemptions.</a>
           </p>
           <p class="f4">
             We calculate the tentative minimum tax by applying the AMT rate (either 26% or 28%, depending on the amount) to the AMT base. For 2018, the threshold where the 26 percent AMT tax bracket ends and the 28 percent AMT tax bracket begins is $95,750 for married filing separately and $191,500 for all other filing statuses.
@@ -339,7 +363,7 @@
           </div>
           <p class="f4">
             The rate on the left applies to income from that row to the one beneath it. For instance, a single person with $150,000 in income will pay 10% on the first $9,525, 12% on the next $29,175, 22% on the next $43,800, and 24% on the remaining $67,500.
-          </p>  
+          </p>
           <div class="mt4 mb6">
             <h1 class="f3 fw3">Additional Reading</h1>
             <p class="lh-copy">

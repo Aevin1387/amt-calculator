@@ -24,7 +24,7 @@ clean:
 # Server.
 server:
 	python -m SimpleHTTPServer \
-  `open "http://localhost:8000/docs"`
+  `open "http://127.0.0.1:8000/docs"`
 
 #
 # Phonies.
